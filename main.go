@@ -21,10 +21,11 @@ var (
 )
 
 const (
-	CMD_FLAG_NAME_DEBUG   = "debug"
-	CMD_FLAG_NAME_CONFIG  = "config"
-	CMD_FLAG_NAME_VERBOSE = "verbose"
-	CMD_FLAG_NAME_NAME    = "name"
+	CMD_FLAG_DEBUG   = "debug"
+	CMD_FLAG_CONFIG  = "config"
+	CMD_FLAG_VERBOSE = "verbose"
+	CMD_FLAG_NAME    = "name"
+	CMD_FLAG_PLAIN   = "plain"
 )
 
 const (
@@ -63,26 +64,32 @@ func main() {
 		Version: fmt.Sprintf("%s %s commit %s", Version, BuildTime, GitCommit),
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:    CMD_FLAG_NAME_DEBUG,
+				Name:    CMD_FLAG_DEBUG,
 				Aliases: []string{"d"},
 				Usage:   "open debug mode",
 			},
 			&cli.StringFlag{
-				Name:    CMD_FLAG_NAME_CONFIG,
+				Name:    CMD_FLAG_CONFIG,
 				Aliases: []string{"c"},
 				Usage:   "config file path",
 				Value:   "config.json",
 			},
 			&cli.BoolFlag{
-				Name:    CMD_FLAG_NAME_VERBOSE,
+				Name:    CMD_FLAG_VERBOSE,
 				Aliases: []string{"V"},
 				Usage:   "print verbose",
 				Value:   false,
 			},
+			&cli.BoolFlag{
+				Name:    CMD_FLAG_PLAIN,
+				Aliases: []string{"p"},
+				Usage:   "print plain text when receive or send data",
+				Value:   false,
+			},
 			&cli.StringFlag{
-				Name:    CMD_FLAG_NAME_NAME,
+				Name:    CMD_FLAG_NAME,
 				Aliases: []string{"n"},
-				Usage:   "bridge name",
+				Usage:   "name to filter",
 			},
 		},
 		Action: func(cctx *cli.Context) error {
@@ -121,10 +128,10 @@ func main() {
 func Start(cctx *cli.Context) error {
 	var elems []ConfigElement
 	strConfig := DEFAULT_CONFIG_FILE
-	if cctx.IsSet(CMD_FLAG_NAME_CONFIG) {
-		strConfig = cctx.String(CMD_FLAG_NAME_CONFIG)
+	if cctx.IsSet(CMD_FLAG_CONFIG) {
+		strConfig = cctx.String(CMD_FLAG_CONFIG)
 	}
-	if cctx.IsSet(CMD_FLAG_NAME_DEBUG) {
+	if cctx.IsSet(CMD_FLAG_DEBUG) {
 		log.SetLevel("debug")
 	} else {
 		log.SetLevel("fatal")

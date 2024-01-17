@@ -1,3 +1,5 @@
 /portmap
 .idea
 /portmap.exe
+/go.work
+/go.work.sum
