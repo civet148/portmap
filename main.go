@@ -83,7 +83,7 @@ func main() {
 			&cli.BoolFlag{
 				Name:    CMD_FLAG_PLAIN,
 				Aliases: []string{"p"},
-				Usage:   "print plain text when receive or send data",
+				Usage:   "print received data as plain text",
 				Value:   false,
 			},
 			&cli.StringFlag{
