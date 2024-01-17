@@ -4,6 +4,7 @@ import (
 	"github.com/civet148/log"
 	"github.com/civet148/socketx"
 	"github.com/civet148/socketx/api"
+	"github.com/urfave/cli/v2"
 	"sync"
 )
 
@@ -21,9 +22,11 @@ type NetBridge struct {
 	host        string
 	scheme      string
 	remote      string
+	name        string
+	cctx        *cli.Context
 }
 
-func NewNetBridge(e ConfigElement) *NetBridge {
+func NewNetBridge(cctx *cli.Context, e ConfigElement) *NetBridge {
 	scheme, host := ParseUrl(e.Remote)
 	strListen := BuildListenUrl(scheme, e.Local)
 	sockServer := socketx.NewServer(strListen)
@@ -32,6 +35,8 @@ func NewNetBridge(e ConfigElement) *NetBridge {
 		host:        host,
 		scheme:      scheme,
 		remote:      e.Remote,
+		name:        e.Name,
+		cctx:        cctx,
 		sockClients: make(map[*socketx.SocketClient]*socketx.SocketClient),
 	}
 	go func() {
@@ -55,10 +60,14 @@ func (s *NetBridge) OnAccept(c *socketx.SocketClient) {
 }
 
 func (s *NetBridge) OnReceive(c *socketx.SocketClient, msg *api.SockMessage) {
+	cctx := s.cctx
 	conn := s.getConnection(c)
 	if conn == nil {
 		c.Close()
 		return
+	}
+	if cctx.Bool(CMD_FLAG_NAME_VERBOSE) && cctx.String(CMD_FLAG_NAME_NAME) == s.name {
+		log.Printf("[%-21s] -> [%-21s] data [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), msg.Data)
 	}
 	_, err := conn.Send(msg.Data)
 	if err != nil {
@@ -77,11 +86,14 @@ func (s *NetBridge) relay(src, dest *socketx.SocketClient) {
 		_ = src.Close()
 		_ = dest.Close()
 	}()
-
+	cctx := s.cctx
 	for {
 		msg, err := dest.Recv(-1)
 		if err != nil {
 			return
+		}
+		if cctx.Bool(CMD_FLAG_NAME_VERBOSE) && cctx.String(CMD_FLAG_NAME_NAME) == s.name {
+			log.Printf("[%-21s] -> [%-21s] data [%s]", dest.GetRemoteAddr(), src.GetRemoteAddr(), msg.Data)
 		}
 		if _, err = src.Send(msg.Data); err != nil {
 			return

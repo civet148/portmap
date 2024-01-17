@@ -21,8 +21,10 @@ var (
 )
 
 const (
-	CMD_FLAG_NAME_DEBUG  = "debug"
-	CMD_FLAG_NAME_CONFIG = "config"
+	CMD_FLAG_NAME_DEBUG   = "debug"
+	CMD_FLAG_NAME_CONFIG  = "config"
+	CMD_FLAG_NAME_VERBOSE = "verbose"
+	CMD_FLAG_NAME_NAME    = "name"
 )
 
 const (
@@ -71,6 +73,17 @@ func main() {
 				Usage:   "config file path",
 				Value:   "config.json",
 			},
+			&cli.BoolFlag{
+				Name:    CMD_FLAG_NAME_VERBOSE,
+				Aliases: []string{"V"},
+				Usage:   "print verbose",
+				Value:   false,
+			},
+			&cli.StringFlag{
+				Name:    CMD_FLAG_NAME_NAME,
+				Aliases: []string{"n"},
+				Usage:   "bridge name",
+			},
 		},
 		Action: func(cctx *cli.Context) error {
 			return Start(cctx)
@@ -116,15 +129,15 @@ func Start(cctx *cli.Context) error {
 	} else {
 		log.SetLevel("fatal")
 	}
-	elems = LoadConfig(strConfig)
-	CreateForwards(elems)
-	PrintForwards(elems)
+	elems = LoadConfig(cctx, strConfig)
+	CreateForwards(cctx, elems)
+	PrintForwards(cctx, elems)
 	var c = make(chan bool, 1)
 	<-c //block main go routine
 	return nil
 }
 
-func LoadConfig(strConfig string) (elems []ConfigElement) {
+func LoadConfig(cctx *cli.Context, strConfig string) (elems []ConfigElement) {
 	bs, err := ioutil.ReadFile(strConfig)
 	if err != nil {
 		log.Panic(err.Error())
@@ -137,7 +150,7 @@ func LoadConfig(strConfig string) (elems []ConfigElement) {
 	return
 }
 
-func CreateForwards(elems []ConfigElement) {
+func CreateForwards(cctx *cli.Context, elems []ConfigElement) {
 	var bridges = make(map[string]*NetBridge)
 	for _, e := range elems {
 		if !e.Enable {
@@ -146,12 +159,12 @@ func CreateForwards(elems []ConfigElement) {
 		if _, ok := bridges[e.Name]; ok {
 			log.Panic("config element name %s already exists", e.Name)
 		}
-		bridge := NewNetBridge(e)
+		bridge := NewNetBridge(cctx, e)
 		bridges[e.Name] = bridge
 	}
 }
 
-func PrintForwards(elems []ConfigElement) {
+func PrintForwards(cctx *cli.Context, elems []ConfigElement) {
 	log.Printf("-------------------------------------------------------------------")
 	for _, e := range elems {
 		if !e.Enable {
