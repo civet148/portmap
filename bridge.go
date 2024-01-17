@@ -56,6 +56,10 @@ func (s *NetBridge) OnAccept(c *socketx.SocketClient) {
 
 func (s *NetBridge) OnReceive(c *socketx.SocketClient, msg *api.SockMessage) {
 	conn := s.getConnection(c)
+	if conn == nil {
+		c.Close()
+		return
+	}
 	_, err := conn.Send(msg.Data)
 	if err != nil {
 		s.deleteConnection(c)

@@ -7,7 +7,7 @@
   },
   {
     "enable": true,
-    "name": "postgres",
+    "name": "postgresql-db-port",
     "local": 65432,
     "remote": "tcp://172.27.205.246:5432"
   },

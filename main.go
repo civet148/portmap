@@ -77,7 +77,29 @@ func main() {
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
-		log.Errorf("exit in error %s", err)
+		log.Errorf("exit in error [%s]", err)
+		fmt.Println(`
+[
+  {
+    "enable": true,
+    "name": "mysql",
+    "local": 33306,
+    "remote": "tcp://172.27.205.246:3306"
+  },
+  {
+    "enable": true,
+    "name": "postgres",
+    "local": 65432,
+    "remote": "tcp://172.27.205.246:5432"
+  },
+  {
+    "enable": true,
+    "name": "ssh",
+    "local": 2222,
+    "remote": "tcp://172.27.205.246:22"
+  }
+]
+`)
 		os.Exit(1)
 		return
 	}
@@ -130,12 +152,12 @@ func CreateForwards(elems []ConfigElement) {
 }
 
 func PrintForwards(elems []ConfigElement) {
-	log.Printf("-------------------------------------------------------")
+	log.Printf("-------------------------------------------------------------------")
 	for _, e := range elems {
 		if !e.Enable {
 			continue
 		}
-		log.Printf("|  %-5v => %-30v %-10s |", e.Local, e.Remote, e.Name)
+		log.Printf("|  %-5v => %-30v %-24s |", e.Local, e.Remote, e.Name)
 	}
-	log.Printf("-------------------------------------------------------")
+	log.Printf("-------------------------------------------------------------------")
 }
