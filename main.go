@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
-	"time"
 )
 
 const (
@@ -19,11 +18,6 @@ const (
 var (
 	BuildTime = "2024-01-16"
 	GitCommit = ""
-)
-
-const (
-	CMD_NAME_START = "start"
-	CMD_NAME_RUN   = "run"
 )
 
 const (
@@ -61,41 +55,32 @@ func grace() {
 
 func main() {
 	grace()
-	commands := []*cli.Command{
-		cmdStart,
-	}
-
 	app := &cli.App{
-		Name:     ProgramName,
-		Version:  fmt.Sprintf("%s %s commit %s", Version, BuildTime, GitCommit),
-		Flags:    []cli.Flag{},
-		Commands: commands,
-		Action:   nil,
+		Name:    ProgramName,
+		Usage:   "a port forwarding CLI tool",
+		Version: fmt.Sprintf("%s %s commit %s", Version, BuildTime, GitCommit),
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    CMD_FLAG_NAME_DEBUG,
+				Aliases: []string{"d"},
+				Usage:   "open debug mode",
+			},
+			&cli.StringFlag{
+				Name:    CMD_FLAG_NAME_CONFIG,
+				Aliases: []string{"c"},
+				Usage:   "config file path",
+				Value:   "config.json",
+			},
+		},
+		Action: func(cctx *cli.Context) error {
+			return Start(cctx)
+		},
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Errorf("exit in error %s", err)
 		os.Exit(1)
 		return
 	}
-}
-
-var cmdStart = &cli.Command{
-	Name: CMD_NAME_START,
-	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:    CMD_FLAG_NAME_DEBUG,
-			Aliases: []string{"d"},
-			Usage:   "open debug mode",
-		},
-		&cli.StringFlag{
-			Name:    CMD_FLAG_NAME_CONFIG,
-			Aliases: []string{"c"},
-			Usage:   "config file path",
-		},
-	},
-	Action: func(cctx *cli.Context) error {
-		return Start(cctx)
-	},
 }
 
 func Start(cctx *cli.Context) error {
@@ -109,21 +94,25 @@ func Start(cctx *cli.Context) error {
 	} else {
 		log.SetLevel("fatal")
 	}
-	bs, err := ioutil.ReadFile(strConfig)
-	if err != nil {
-		return log.Errorf(err.Error())
-	}
-	_ = bs
-	err = json.Unmarshal(bs, &elems)
-	if err != nil {
-		return log.Errorf(err.Error())
-	}
+	elems = LoadConfig(strConfig)
 	CreateForwards(elems)
-	time.Sleep(3 * time.Second)
 	PrintForwards(elems)
 	var c = make(chan bool, 1)
 	<-c //block main go routine
 	return nil
+}
+
+func LoadConfig(strConfig string) (elems []ConfigElement) {
+	bs, err := ioutil.ReadFile(strConfig)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	_ = bs
+	err = json.Unmarshal(bs, &elems)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	return
 }
 
 func CreateForwards(elems []ConfigElement) {
