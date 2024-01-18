@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"time"
 )
 
 const (
@@ -126,7 +127,7 @@ func main() {
 }
 
 func Start(cctx *cli.Context) error {
-	var elems []ConfigElement
+	var elems []*ConfigElement
 	strConfig := DEFAULT_CONFIG_FILE
 	if cctx.IsSet(CMD_FLAG_CONFIG) {
 		strConfig = cctx.String(CMD_FLAG_CONFIG)
@@ -136,15 +137,17 @@ func Start(cctx *cli.Context) error {
 	} else {
 		log.SetLevel("fatal")
 	}
-	elems = LoadConfig(cctx, strConfig)
-	CreateForwards(cctx, elems)
-	PrintForwards(cctx, elems)
+	elems = LoadConfig(strConfig)
+	var bridges = make(map[string]*NetBridge)
+	CreateForwards(cctx, elems, bridges)
+	time.Sleep(3 * time.Second)
+	PrintForwards(cctx, elems, bridges)
 	var c = make(chan bool, 1)
 	<-c //block main go routine
 	return nil
 }
 
-func LoadConfig(cctx *cli.Context, strConfig string) (elems []ConfigElement) {
+func LoadConfig(strConfig string) (elems []*ConfigElement) {
 	bs, err := ioutil.ReadFile(strConfig)
 	if err != nil {
 		log.Panic(err.Error())
@@ -157,8 +160,7 @@ func LoadConfig(cctx *cli.Context, strConfig string) (elems []ConfigElement) {
 	return
 }
 
-func CreateForwards(cctx *cli.Context, elems []ConfigElement) {
-	var bridges = make(map[string]*NetBridge)
+func CreateForwards(cctx *cli.Context, elems []*ConfigElement, bridges map[string]*NetBridge) {
 	for _, e := range elems {
 		if !e.Enable {
 			continue
@@ -171,15 +173,19 @@ func CreateForwards(cctx *cli.Context, elems []ConfigElement) {
 	}
 }
 
-func PrintForwards(cctx *cli.Context, elems []ConfigElement) {
-	log.Printf("---------------------------------------------------------------------")
-	log.Printf("|  %-5v  |            %s            |           %s           |", "local", "remote", "name")
-	log.Printf("---------------------------------------------------------------------")
+func PrintForwards(cctx *cli.Context, elems []*ConfigElement, bridges map[string]*NetBridge) {
+	log.Printf("------------------------------------------------------------------------------")
+	log.Printf("|  %-5v  |            %s            |           %s           | %-5s |", "local", "remote", "name", "status")
+	log.Printf("------------------------------------------------------------------------------")
 	for _, e := range elems {
 		if !e.Enable {
 			continue
 		}
-		log.Printf("|  %-5v  | %-28s | %-24s |", e.Local, e.Remote, e.Name)
+		brdge, ok := bridges[e.Name]
+		if !ok {
+			continue
+		}
+		log.Printf("|  %-5v  | %-28s | %-24s | %-9s |", e.Local, e.Remote, e.Name, brdge.Status)
 	}
-	log.Printf("---------------------------------------------------------------------")
+	log.Printf("------------------------------------------------------------------------------")
 }

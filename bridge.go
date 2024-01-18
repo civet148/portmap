@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+const (
+	StatusOK     = "\u001B[32m OK   \u001B[0m"
+	StatusFailed = "\u001B[32m ERR  \u001B[0m"
+)
+
 type ConfigElement struct {
 	Enable bool   `json:"enable"`
 	Name   string `json:"name"`
@@ -27,9 +32,10 @@ type NetBridge struct {
 	remote      string
 	name        string
 	cctx        *cli.Context
+	Status      string
 }
 
-func NewNetBridge(cctx *cli.Context, e ConfigElement) *NetBridge {
+func NewNetBridge(cctx *cli.Context, e *ConfigElement) *NetBridge {
 	scheme, host := ParseUrl(e.Remote)
 	strListen := BuildListenUrl(scheme, e.Local)
 	sockServer := socketx.NewServer(strListen)
@@ -40,13 +46,19 @@ func NewNetBridge(cctx *cli.Context, e ConfigElement) *NetBridge {
 		remote:      e.Remote,
 		name:        e.Name,
 		cctx:        cctx,
+		Status:      StatusOK,
 		sockClients: make(map[*socketx.SocketClient]*socketx.SocketClient),
 	}
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		wg.Done()
 		if err := nb.sockServer.Listen(nb); err != nil {
-			log.Panic(err.Error())
+			log.Errorf(err.Error())
+			nb.Status = StatusFailed
 		}
 	}()
+	wg.Wait()
 	return nb
 }
 
