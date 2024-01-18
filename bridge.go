@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	StatusOK     = "\u001B[32m OK   \u001B[0m"
-	StatusFailed = "\u001B[32m ERR  \u001B[0m"
+	StatusOK     = "\033[32m OK   \033[0m"
+	StatusFailed = "\033[31m ERR  \033[0m"
 )
 
 type ConfigElement struct {

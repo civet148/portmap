@@ -140,7 +140,7 @@ func Start(cctx *cli.Context) error {
 	elems = LoadConfig(strConfig)
 	var bridges = make(map[string]*NetBridge)
 	CreateForwards(cctx, elems, bridges)
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 	PrintForwards(cctx, elems, bridges)
 	var c = make(chan bool, 1)
 	<-c //block main go routine
