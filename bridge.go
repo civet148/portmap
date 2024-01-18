@@ -7,13 +7,16 @@ import (
 	"github.com/civet148/socketx/api"
 	"github.com/urfave/cli/v2"
 	"io"
+	"runtime"
 	"sync"
 	"time"
 )
 
 const (
-	StatusOK     = "\033[32m OK   \033[0m"
-	StatusFailed = "\033[31m ERR  \033[0m"
+	StatusOK                 = "\033[32m OK   \033[0m"
+	StatusFailed             = "\033[31m ERR  \033[0m"
+	StatusOKWithoutColor     = "  OK  "
+	StatusFailedWithoutColor = "  ERR "
 )
 
 type ConfigElement struct {
@@ -32,13 +35,14 @@ type NetBridge struct {
 	remote      string
 	name        string
 	cctx        *cli.Context
-	Status      string
+	ok          bool
 }
 
 func NewNetBridge(cctx *cli.Context, e *ConfigElement) *NetBridge {
 	scheme, host := ParseUrl(e.Remote)
 	strListen := BuildListenUrl(scheme, e.Local)
 	sockServer := socketx.NewServer(strListen)
+
 	nb := &NetBridge{
 		sockServer:  sockServer,
 		host:        host,
@@ -46,7 +50,7 @@ func NewNetBridge(cctx *cli.Context, e *ConfigElement) *NetBridge {
 		remote:      e.Remote,
 		name:        e.Name,
 		cctx:        cctx,
-		Status:      StatusOK,
+		ok:          true,
 		sockClients: make(map[*socketx.SocketClient]*socketx.SocketClient),
 	}
 	var wg sync.WaitGroup
@@ -55,11 +59,29 @@ func NewNetBridge(cctx *cli.Context, e *ConfigElement) *NetBridge {
 		wg.Done()
 		if err := nb.sockServer.Listen(nb); err != nil {
 			log.Errorf(err.Error())
-			nb.Status = StatusFailed
+			nb.ok = false
 		}
 	}()
 	wg.Wait()
 	return nb
+}
+
+func (s *NetBridge) ColorStatus() string {
+	var status string
+	if s.ok {
+		status = StatusOK
+	} else {
+		status = StatusFailed
+	}
+	switch runtime.GOOS {
+	case "windows":
+		if s.ok {
+			status = StatusOKWithoutColor
+		} else {
+			status = StatusFailedWithoutColor
+		}
+	}
+	return status
 }
 
 func (s *NetBridge) OnAccept(c *socketx.SocketClient) {

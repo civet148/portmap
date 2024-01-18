@@ -185,7 +185,7 @@ func PrintForwards(cctx *cli.Context, elems []*ConfigElement, bridges map[string
 		if !ok {
 			continue
 		}
-		log.Printf("|  %-5v  | %-28s | %-24s | %-9s |", e.Local, e.Remote, e.Name, brdge.Status)
+		log.Printf("|  %-5v  | %-28s | %-24s | %-5s |", e.Local, e.Remote, e.Name, brdge.ColorStatus())
 	}
 	log.Printf("------------------------------------------------------------------------------")
 }
