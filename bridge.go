@@ -85,9 +85,9 @@ func (s *NetBridge) OnReceive(c *socketx.SocketClient, msg *api.SockMessage) {
 			text = fmt.Sprintf("%s", msg.Data)
 		}
 		if cctx.IsSet(CMD_FLAG_NAME) && cctx.String(CMD_FLAG_NAME) == s.name {
-			log.Printf("[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), len(msg.Data), text)
+			log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), len(msg.Data), text)
 		} else {
-			log.Printf("[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), len(msg.Data), text)
+			log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), len(msg.Data), text)
 		}
 	}
 	_, err := conn.Send(msg.Data)
@@ -124,10 +124,11 @@ func (s *NetBridge) relay(src, dest *socketx.SocketClient) {
 				if cctx.Bool(CMD_FLAG_PLAIN) {
 					text = fmt.Sprintf("%s", msg.Data)
 				}
+				log.Printf("-----------------------------------------------------------------------------------")
 				if cctx.IsSet(CMD_FLAG_NAME) && cctx.String(CMD_FLAG_NAME) == s.name {
-					log.Printf("[%-21s] -> [%-21s] length [%v] text [%s]", dest.GetRemoteAddr(), src.GetRemoteAddr(), len(msg.Data), text)
+					log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", dest.GetRemoteAddr(), src.GetRemoteAddr(), len(msg.Data), text)
 				} else {
-					log.Printf("[%-21s] -> [%-21s] length [%v] text [%s]", dest.GetRemoteAddr(), src.GetRemoteAddr(), len(msg.Data), text)
+					log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", dest.GetRemoteAddr(), src.GetRemoteAddr(), len(msg.Data), text)
 				}
 			}
 			if _, err = src.Send(msg.Data); err != nil {
