@@ -172,12 +172,12 @@ func CreateForwards(cctx *cli.Context, elems []ConfigElement) {
 }
 
 func PrintForwards(cctx *cli.Context, elems []ConfigElement) {
-	log.Printf("-------------------------------------------------------------------")
+	log.Printf("---------------------------------------------------------------------")
 	for _, e := range elems {
 		if !e.Enable {
 			continue
 		}
 		log.Printf("|  %-5v => %-30v %-24s |", e.Local, e.Remote, e.Name)
 	}
-	log.Printf("-------------------------------------------------------------------")
+	log.Printf("---------------------------------------------------------------------")
 }
