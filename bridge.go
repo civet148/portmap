@@ -72,11 +72,11 @@ func (s *NetBridge) OnReceive(c *socketx.SocketClient, msg *api.SockMessage) {
 			ok = true
 			break
 		}
-		log.Debugf("connection %s has no remote client found", c.GetRemoteAddr())
 		time.Sleep(time.Second)
 	}
 	if !ok {
 		c.Close()
+		log.Errorf("[%s] has no remote [%s] client found", c.GetRemoteAddr(), s.remote)
 		return
 	}
 	if cctx.Bool(CMD_FLAG_VERBOSE) {
