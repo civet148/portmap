@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/civet148/log v1.5.0
-	github.com/civet148/socketx v1.2.2
+	github.com/civet148/socketx v1.2.3
 	github.com/urfave/cli/v2 v2.17.2-0.20221006022127-8f469abc00aa
 )
 
