@@ -1,20 +1,20 @@
 [
   {
-    "enable": true,
+    "enable": false,
     "name": "mysql",
     "local": 33306,
     "remote": "tcp://172.27.205.246:3306"
   },
   {
-    "enable": true,
+    "enable": false,
     "name": "postgresql-db-port",
     "local": 65432,
     "remote": "tcp://172.27.205.246:5432"
   },
   {
     "enable": true,
-    "name": "ssh",
-    "local": 2222,
-    "remote": "tcp://172.27.205.246:22"
+    "name": "intent-system",
+    "local": 8083,
+    "remote": "tcp://172.27.205.246:8083"
   }
 ]

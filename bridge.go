@@ -86,31 +86,38 @@ func (s *NetBridge) ColorStatus() string {
 
 func (s *NetBridge) OnAccept(c *socketx.SocketClient) {
 	log.Infof("connection accepted [%v] forward to remote [%s]", c.GetRemoteAddr(), s.remote)
-	conn := socketx.NewClient()
-	err := conn.Connect(s.remote)
+	dest := socketx.NewClient()
+	err := dest.Connect(s.remote)
 	if err != nil {
 		log.Errorf("connect to remote [%s] error [%s]", s.remote, err.Error())
 		return
 	}
-	s.addConn(c, conn)
-	s.relay(c, conn)
+	s.addConn(c, dest)
+	s.relay(c, dest)
+}
+
+func (s *NetBridge) tryGetConn(c *socketx.SocketClient) (dest *socketx.SocketClient, err error) {
+	for i := 0; i < 5; i++ {
+		dest = s.getConn(c)
+		if dest != nil {
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	if dest == nil {
+		return nil, log.Errorf("client %s no relay socket found", c.GetRemoteAddr())
+	}
+	return dest, nil
 }
 
 func (s *NetBridge) OnReceive(c *socketx.SocketClient, msg *api.SockMessage) {
+	var err error
 	cctx := s.cctx
-	var ok bool
-	var conn *socketx.SocketClient
-	for i := 0; i < 5; i++ {
-		conn = s.getConn(c)
-		if conn != nil {
-			ok = true
-			break
-		}
-		time.Sleep(time.Second)
-	}
-	if !ok {
-		c.Close()
-		log.Errorf("[%s] has no remote [%s] client found", c.GetRemoteAddr(), s.remote)
+	var dest *socketx.SocketClient
+	log.Infof("receive from socket [%p] local addr [%s] remote [%s]", c, c.GetLocalAddr(), c.GetRemoteAddr())
+	dest, err = s.tryGetConn(c)
+	if err != nil {
+		log.Errorf(err.Error())
 		return
 	}
 	if cctx.Bool(CMD_FLAG_VERBOSE) {
@@ -119,14 +126,14 @@ func (s *NetBridge) OnReceive(c *socketx.SocketClient, msg *api.SockMessage) {
 			text = fmt.Sprintf("%s", msg.Data)
 		}
 		if cctx.IsSet(CMD_FLAG_NAME) && cctx.String(CMD_FLAG_NAME) == s.name {
-			log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), len(msg.Data), text)
+			log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), dest.GetRemoteAddr(), len(msg.Data), text)
 		} else {
-			log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), len(msg.Data), text)
+			log.Printf("\n[%-21s] -> [%-21s] length [%v] text [%s]", c.GetRemoteAddr(), dest.GetRemoteAddr(), len(msg.Data), text)
 		}
 	}
-	_, err := conn.Send(msg.Data)
+	_, err = dest.Send(msg.Data)
 	if err != nil {
-		log.Errorf("[%s] -> [%s] send error [%s]", c.GetRemoteAddr(), conn.GetRemoteAddr(), err.Error())
+		log.Errorf("[%s] -> [%s] send error [%s]", c.GetRemoteAddr(), dest.GetRemoteAddr(), err.Error())
 		s.deleteConn(c)
 		return
 	}
@@ -138,11 +145,9 @@ func (s *NetBridge) OnClose(c *socketx.SocketClient) {
 }
 
 func (s *NetBridge) relay(src, dest *socketx.SocketClient) {
+	log.Infof("relay from [%p] to [%p]", src, dest)
 	go func() {
-		defer func() {
-			_ = src.Close()
-			_ = dest.Close()
-		}()
+		defer s.deleteConn(src)
 		cctx := s.cctx
 		for {
 			msg, err := dest.Recv(-1)
@@ -180,15 +185,20 @@ func (s *NetBridge) addConn(src, dest *socketx.SocketClient) {
 	s.locker.Unlock()
 }
 
-func (s *NetBridge) getConn(c *socketx.SocketClient) (conn *socketx.SocketClient) {
+func (s *NetBridge) getConn(src *socketx.SocketClient) (dest *socketx.SocketClient) {
 	s.locker.RLock()
-	conn = s.sockClients[c]
+	dest = s.sockClients[src]
 	s.locker.RUnlock()
-	return conn
+	return dest
 }
 
-func (s *NetBridge) deleteConn(c *socketx.SocketClient) {
+func (s *NetBridge) deleteConn(src *socketx.SocketClient) {
 	s.locker.Lock()
-	delete(s.sockClients, c)
+	dest, ok := s.sockClients[src]
+	if ok {
+		dest.Close()
+	}
+	src.Close()
+	delete(s.sockClients, src)
 	s.locker.Unlock()
 }
