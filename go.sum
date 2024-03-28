@@ -24,8 +24,8 @@ github.com/civet148/gotools v1.4.1/go.mod h1:SfbUhBkKsnCIZ+1Ac94sQ2yTCbwkRKgVjDg
 github.com/civet148/log v1.4.4/go.mod h1:1+dISnXR1i3HoAVd3IAzhs0TduJ7QOC50ZHEfzXGH7o=
 github.com/civet148/log v1.5.0 h1:bavBmx+TdG3YdL98tScUiw+6PCuGVLCgH99dc16oP1Y=
 github.com/civet148/log v1.5.0/go.mod h1:1+dISnXR1i3HoAVd3IAzhs0TduJ7QOC50ZHEfzXGH7o=
-github.com/civet148/socketx v1.4.3 h1:XdgIPjTG0jwnxcP3VbSSuTSRPzPJWy15MR6gskibEdM=
-github.com/civet148/socketx v1.4.3/go.mod h1:dcYlimj1k+/wauiyWugZQw4t3aAjyzZ7n9OliMJI4Lo=
+github.com/civet148/socketx v1.4.4 h1:Ql6q4oP8dIfM1NoQLlpIrspMihK3EYKSzlt9AZBmlAc=
+github.com/civet148/socketx v1.4.4/go.mod h1:dcYlimj1k+/wauiyWugZQw4t3aAjyzZ7n9OliMJI4Lo=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
